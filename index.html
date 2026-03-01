@@ -3,6 +3,7 @@
 
 <head>
     <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Can we in relationship?</title>
     <style>
         body {
@@ -11,6 +12,7 @@
             height: 100vh;
             margin: 0;
             overflow: hidden;
+            touch-action: manipulation;
         }
 
         .container {
@@ -25,13 +27,12 @@
 
         h1 {
             color: #e91e63;
-            transform: translateY(-40px);
+            transform: translateY(-60px);
         }
 
         .btn {
             width: 120px;
             height: 44px;
-            /* cố định chiều cao cho đều */
             display: flex;
             align-items: center;
             justify-content: center;
@@ -40,10 +41,10 @@
             font-size: 18px;
             cursor: pointer;
             position: absolute;
-            transition: 0.2s;
+            transition: 0.15s;
+            touch-action: manipulation;
         }
 
-        /* Căn giữa cụm 2 nút */
         #yesBtn {
             background: #4caf50;
             color: white;
@@ -67,7 +68,8 @@
         }
 
         #memePage img {
-            width: 300px;
+            width: 260px;
+            max-width: 80vw;
             border-radius: 20px;
             margin: 20px 0;
         }
@@ -103,8 +105,7 @@
 
     <div class="container" id="memePage">
         <h1>Stop messing with me! 😾</h1>
-        <!-- Thay link ảnh nếu muốn -->
-        <img src='https://i.postimg.cc/xqCW1jdj/cat2.png' border='0' alt='cat2'>
+        <img src="https://i.postimg.cc/xqCW1jdj/cat2.png" alt="cat" />
     </div>
 
     <script>
@@ -120,14 +121,21 @@
         const defaultNoPos = { left: "50%", top: "55%", transform: "translateX(10%)" };
 
         function randomPosition(btn) {
-            const x = Math.random() * (window.innerWidth - 100);
-            const y = Math.random() * (window.innerHeight - 50);
+            const btnW = btn.offsetWidth;
+            const btnH = btn.offsetHeight;
+
+            const maxX = window.innerWidth - btnW - 10;
+            const maxY = window.innerHeight - btnH - 10;
+
+            const x = Math.random() * maxX;
+            const y = Math.random() * maxY;
+
             btn.style.left = x + "px";
             btn.style.top = y + "px";
             btn.style.transform = "translate(0,0)";
         }
 
-        noBtn.addEventListener("mouseenter", () => {
+        function handleNoMove() {
             if (!specialMode) {
                 randomPosition(noBtn);
                 moveCount++;
@@ -137,7 +145,6 @@
                     memePage.style.display = "flex";
                 }
             } else {
-                // Sau khi quay lại: Yes đổi chỗ với No
                 const yesLeft = yesBtn.style.left;
                 const yesTop = yesBtn.style.top;
                 const yesTransform = yesBtn.style.transform;
@@ -152,6 +159,15 @@
 
                 randomPosition(noBtn);
             }
+        }
+
+        // PC hover
+        noBtn.addEventListener("mouseenter", handleNoMove);
+
+        // Mobile tap
+        noBtn.addEventListener("touchstart", (e) => {
+            e.preventDefault();
+            handleNoMove();
         });
 
         memePage.addEventListener("click", () => {
@@ -160,7 +176,6 @@
             moveCount = 0;
             specialMode = true;
 
-            // reset vị trí ban đầu + hiện lại nút
             yesBtn.style.left = defaultYesPos.left;
             yesBtn.style.top = defaultYesPos.top;
             yesBtn.style.transform = defaultYesPos.transform;
@@ -173,41 +188,32 @@
             noBtn.style.display = "block";
         });
 
-        // Mưa tim 5s khi bấm Yes
         yesBtn.addEventListener("click", () => {
             const centerX = window.innerWidth / 2;
             const centerY = window.innerHeight / 2;
 
+            const points = 5 + Math.floor(Math.random() * 3); // 5–7 điểm khác nhau
+
             const start = Date.now();
             const interval = setInterval(() => {
-                // mỗi đợt tạo 1–2 trái tim
-                const count = Math.floor(Math.random() * 2) + 1;
-
-                for (let i = 0; i < count; i++) {
+                for (let i = 0; i < points; i++) {
                     const heart = document.createElement("div");
                     heart.className = "heart";
                     heart.innerText = "💖";
 
-                    // random 5–7 vị trí quanh tâm (bán kính ~40px)
                     const angle = Math.random() * Math.PI * 2;
-                    const radius = 20 + Math.random() * 40;
+                    const radius = 20 + Math.random() * 60;
 
-                    const x = centerX + Math.cos(angle) * radius;
-                    const y = centerY + Math.sin(angle) * radius;
-
-                    heart.style.left = x + "px";
-                    heart.style.top = y + "px";
+                    heart.style.left = centerX + Math.cos(angle) * radius + "px";
+                    heart.style.top = centerY + Math.sin(angle) * radius + "px";
 
                     document.body.appendChild(heart);
                     setTimeout(() => heart.remove(), 2000);
                 }
 
-                if (Date.now() - start > 5000) {
-                    clearInterval(interval);
-                }
+                if (Date.now() - start > 5000) clearInterval(interval);
             }, 120);
 
-            // Ẩn 2 nút sau khi bấm Yes
             yesBtn.style.display = "none";
             noBtn.style.display = "none";
         });
@@ -216,5 +222,3 @@
 </body>
 
 </html>
-
-
