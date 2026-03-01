@@ -116,28 +116,83 @@
 
         let moveCount = 0;
         let specialMode = false;
+        let lastNoPos = null;
 
         const defaultYesPos = { left: "50%", top: "55%", transform: "translateX(-110%)" };
         const defaultNoPos = { left: "50%", top: "55%", transform: "translateX(10%)" };
 
-        function randomPosition(btn) {
+        const MIN_GAP = 120; // khoảng cách tối thiểu (px)
+
+        function getCenter(btn) {
+            const rect = btn.getBoundingClientRect();
+            return {
+                x: rect.left + rect.width / 2,
+                y: rect.top + rect.height / 2
+            };
+        }
+
+        function distance(a, b) {
+            return Math.hypot(a.x - b.x, a.y - b.y);
+        }
+
+        function randomPositionAvoid(btn, avoidBtn) {
             const btnW = btn.offsetWidth;
             const btnH = btn.offsetHeight;
 
             const maxX = window.innerWidth - btnW - 10;
             const maxY = window.innerHeight - btnH - 10;
 
-            const x = Math.random() * maxX;
-            const y = Math.random() * maxY;
+            let x, y, tries = 0;
+
+            do {
+                x = Math.random() * maxX;
+                y = Math.random() * maxY;
+                tries++;
+                if (tries > 20) break;
+            } while (distance(
+                { x: x + btnW / 2, y: y + btnH / 2 },
+                getCenter(avoidBtn)
+            ) < MIN_GAP);
 
             btn.style.left = x + "px";
             btn.style.top = y + "px";
             btn.style.transform = "translate(0,0)";
+
+            lastNoPos = { x: x + btnW / 2, y: y + btnH / 2 };
+        }
+
+        function randomPositionFromLast(btn) {
+            const btnW = btn.offsetWidth;
+            const btnH = btn.offsetHeight;
+
+            const maxX = window.innerWidth - btnW - 10;
+            const maxY = window.innerHeight - btnH - 10;
+
+            let x, y, tries = 0;
+
+            do {
+                x = Math.random() * maxX;
+                y = Math.random() * maxY;
+                tries++;
+                if (tries > 20) break;
+            } while (
+                lastNoPos &&
+                distance(
+                    { x: x + btnW / 2, y: y + btnH / 2 },
+                    lastNoPos
+                ) < MIN_GAP
+            );
+
+            btn.style.left = x + "px";
+            btn.style.top = y + "px";
+            btn.style.transform = "translate(0,0)";
+
+            lastNoPos = { x: x + btnW / 2, y: y + btnH / 2 };
         }
 
         function handleNoMove() {
             if (!specialMode) {
-                randomPosition(noBtn);
+                randomPositionAvoid(noBtn, yesBtn);
                 moveCount++;
 
                 if (moveCount >= 3) {
@@ -145,6 +200,7 @@
                     memePage.style.display = "flex";
                 }
             } else {
+                // đổi chỗ Yes <-> No
                 const yesLeft = yesBtn.style.left;
                 const yesTop = yesBtn.style.top;
                 const yesTransform = yesBtn.style.transform;
@@ -157,14 +213,12 @@
                 noBtn.style.top = yesTop;
                 noBtn.style.transform = yesTransform;
 
-                randomPosition(noBtn);
+                // No chạy xa vị trí cũ của chính nó
+                randomPositionFromLast(noBtn);
             }
         }
 
-        // PC hover
         noBtn.addEventListener("mouseenter", handleNoMove);
-
-        // Mobile tap
         noBtn.addEventListener("touchstart", (e) => {
             e.preventDefault();
             handleNoMove();
@@ -175,6 +229,7 @@
             mainPage.style.display = "flex";
             moveCount = 0;
             specialMode = true;
+            lastNoPos = null;
 
             yesBtn.style.left = defaultYesPos.left;
             yesBtn.style.top = defaultYesPos.top;
@@ -192,10 +247,10 @@
             const centerX = window.innerWidth / 2;
             const centerY = window.innerHeight / 2;
 
-            const points = 5 + Math.floor(Math.random() * 3); // 5–7 điểm khác nhau
-
             const start = Date.now();
             const interval = setInterval(() => {
+                const points = 5 + Math.floor(Math.random() * 3);
+
                 for (let i = 0; i < points; i++) {
                     const heart = document.createElement("div");
                     heart.className = "heart";
@@ -222,4 +277,3 @@
 </body>
 
 </html>
-
